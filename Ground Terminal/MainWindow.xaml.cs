@@ -12,6 +12,7 @@ namespace Ground_Terminal
         public MainWindow()
         {
             InitializeComponent();
+            LoadDataToGrid();
         }
 
         private void LoadDataToGrid()
@@ -24,28 +25,26 @@ namespace Ground_Terminal
             MessageBox.Show("On every key press");
         }
 
-        //private void searchBox_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
-        //{
-        //    //var filtered = data.Where(x => x.Type.StartsWith(searchBox.Text));
-        //    //dataGrid.ItemsSource = filtered;
-        //}
-
         private List<AircraftTelemetryData> LoadCollectionData()
         {
             List<AircraftTelemetryData> data = new List<AircraftTelemetryData>();
 
             //use loop to generate list of AircraftTelemetryData object with data from DB
-            data.Add(new AircraftTelemetryData()
+            for(int i=0; i<15; i++)
             {
-                Timestamp = new DateTime(),
-                AccelX = 0.00,
-                AccelY = 0.00,
-                AccelZ = 0.00,
-                Weight = 0.00,
-                Altitude = 0.00,
-                Pitch = 0.00,
-                Bank = 0.00
-            });
+                data.Add(new AircraftTelemetryData()
+                {
+                    Timestamp = new DateTime(),
+                    AccelX = Convert.ToDouble(i),
+                    AccelY = Convert.ToDouble(i),
+                    AccelZ = Convert.ToDouble(i),
+                    Weight = Convert.ToDouble(i),
+                    Altitude = Convert.ToDouble(i),
+                    Pitch = Convert.ToDouble(i),
+                    Bank = Convert.ToDouble(i)
+                });
+            }
+            
 
             return data;
         }
