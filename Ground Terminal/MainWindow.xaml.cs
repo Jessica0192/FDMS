@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Windows;
 
 namespace Ground_Terminal
@@ -27,8 +28,26 @@ namespace Ground_Terminal
 
         private List<AircraftTelemetryData> LoadCollectionData()
         {
+            String connectionString = "";
+            SqlConnection connection = new SqlConnection(connectionString);
+            SqlDataReader reader = null;
             List<AircraftTelemetryData> data = new List<AircraftTelemetryData>();
 
+            //connection.Open();
+            //while (reader.Read())
+            //{
+            //    data.Add(new AircraftTelemetryData()
+            //    {
+            //        Timestamp = reader.GetDateTime(0),
+            //        AccelX = reader.GetDouble(1),
+            //        AccelY = reader.GetDouble(2),
+            //        AccelZ = reader.GetDouble(3),
+            //        Weight = reader.GetDouble(4),
+            //        Altitude = reader.GetDouble(5),
+            //        Pitch = reader.GetDouble(6),
+            //        Bank = reader.GetDouble(7)
+            //    });
+            //}
             //use loop to generate list of AircraftTelemetryData object with data from DB
             for(int i=0; i<15; i++)
             {
