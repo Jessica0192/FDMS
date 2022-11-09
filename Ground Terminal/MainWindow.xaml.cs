@@ -86,8 +86,9 @@ namespace Ground_Terminal
 
                 if(isRealTime ==  true)
                 {
-                    WriteCollectionData(data);
+                    
                 }
+                WriteCollectionData(data);
 
                 return data;
             }
@@ -106,27 +107,24 @@ namespace Ground_Terminal
         */
         private void WriteCollectionData(List<AircraftTelemetryData> telData)
         {
-            String connectionString = @"server=localhost;database=FDMS_Test;trusted_connection=true";
+            String connectionString = @"server=localhost;database=FDMS;trusted_connection=true";
             SqlConnection connection = new SqlConnection(connectionString);
 
             try
             {
                 connection.Open();
 
-                string dataWrite = "INSERT INTO Telemetry_Test (Tail_Number, Date_Time_Stamp, AccelX, AccelY, AccelZ, telWeight, Altitude, Pitch, Bank)";
-                dataWrite += " VALUES (@telTailNum, @telDate , @telAccelX, @telAccelY, @telAccelZ, @telWeightPar, @telAlt, @telPitch, @telBank)";
+                string telDataWrite = "INSERT INTO Telemetry (Tail_Number, Date_Time_Stamp)";
+                telDataWrite += " VALUES (@telTailNum, @telDate)";
+                string gDataWrite = "INSERT INTO GForce (AccelX, AccelY, AccelZ, telWeight)";
+                gDataWrite += " VALUES (@telAccelX, @telAccelY, @telAccelZ, @telWeightPar)";
+                string altDataWrite = "INSERT INTO Altitude (Altitude, Pitch, Bank)";
+                altDataWrite += " VALUES (@telAlt, @telPitch, @telBank)";
 
-                SqlCommand command = new SqlCommand(dataWrite, connection);
+                SqlCommand command = new SqlCommand(telDataWrite, connection);
                 //command.Parameters.AddWithValue("@telNum", 1);
                 command.Parameters.AddWithValue("@telTailNum", 3456);
                 command.Parameters.AddWithValue("@telDate", telData[0].Timestamp);
-                command.Parameters.AddWithValue("@telAccelX", telData[0].AccelX);
-                command.Parameters.AddWithValue("@telAccelY", telData[0].AccelY);
-                command.Parameters.AddWithValue("@telAccelZ", telData[0].AccelZ);
-                command.Parameters.AddWithValue("@telWeightPar", telData[0].Weight);
-                command.Parameters.AddWithValue("@telAlt", telData[0].Altitude);
-                command.Parameters.AddWithValue("@telPitch", telData[0].Pitch);
-                command.Parameters.AddWithValue("@telBank", telData[0].Bank);
 
                // command.Prepare();
                int result = command.ExecuteNonQuery();
@@ -134,6 +132,23 @@ namespace Ground_Terminal
                 {
                     Console.WriteLine("Success");
                 }
+                connection.Close();
+
+                connection.Open();
+                command = new SqlCommand(gDataWrite, connection);
+                command.Parameters.AddWithValue("@telAccelX", telData[0].AccelX);
+                command.Parameters.AddWithValue("@telAccelY", telData[0].AccelY);
+                command.Parameters.AddWithValue("@telAccelZ", telData[0].AccelZ);
+                command.Parameters.AddWithValue("@telWeightPar", telData[0].Weight);
+                result = command.ExecuteNonQuery();
+                connection.Close();
+
+                connection.Open();
+                command = new SqlCommand(altDataWrite, connection);
+                command.Parameters.AddWithValue("@telAlt", telData[0].Altitude);
+                command.Parameters.AddWithValue("@telPitch", telData[0].Pitch);
+                command.Parameters.AddWithValue("@telBank", telData[0].Bank);
+                result = command.ExecuteNonQuery();
                 connection.Close();
             }
             catch(SqlException e)
@@ -150,12 +165,12 @@ namespace Ground_Terminal
         */
         private List<AircraftTelemetryData> LoadCollectionData()
         {
-            String connectionString = @"server=localhost; database=FDMS_Test;trusted_connection=true";
+            String connectionString = @"server=localhost; database=FDMS;trusted_connection=true";
             SqlConnection connection = new SqlConnection(connectionString);
             List<AircraftTelemetryData> data = new List<AircraftTelemetryData>();
-            SqlCommand readTelcmd = new SqlCommand("SELECT TOP 15 Tail_Number, Date_Time_Stamp, AccelX, AccelY, AccelZ, telWeight, Altitude, Pitch, Bank FROM Telemetry_Test", connection);
-            //SqlCommand readGForcecmd = new SqlCommand("SELECT TOP 15 FROM GForce", connection);
-            //SqlCommand readAltcmd = new SqlCommand("SELECT TOP 15 FROM Altitude", connection);
+            SqlCommand readTelcmd = new SqlCommand("SELECT TOP 15 Tail_Number, Date_Time_Stamp FROM Telemetry", connection);
+            SqlCommand readGForcecmd = new SqlCommand("SELECT TOP 15 AccelX, AccelY, AccelZ, telWeight FROM GForce", connection);
+            SqlCommand readAltcmd = new SqlCommand("SELECT TOP 15 Altitude, Pitch, Bank FROM Altitude", connection);
 
             connection.Open();
 
@@ -166,35 +181,40 @@ namespace Ground_Terminal
                 data.Add(new AircraftTelemetryData()
                 {
                     Timestamp = reader.GetDateTime(1),
-                    AccelX = reader.GetDouble(2),
-                    AccelY = reader.GetDouble(3),
-                    AccelZ = reader.GetDouble(4),
-                    Weight = reader.GetDouble(5),
-                    Altitude = reader.GetDouble(6),
-                    Pitch = reader.GetDouble(7),
-                    Bank = reader.GetDouble(8)
                 });
             }
             reader.Close();
             connection.Close();
 
-           // connection.Open();
+            int dataIndex = 0;
+            connection.Open();
 
-            //reader = readGForcecmd.ExecuteReader();
-            //while(reader.Read())
-            //{
-            //    data.Add(new AircraftTelemetryData()
-            //    {
-            //        AccelX = reader.GetDouble(1),
-            //        AccelY = reader.GetDouble(2),
-            //        AccelZ = reader.GetDouble(3),
-            //        Weight = reader.GetDouble(4)
-            //    });
-            //}
-            //reader.Close();
-            //connection.Close();
+            reader = readGForcecmd.ExecuteReader();
+            while (reader.Read())
+            {
+                data[dataIndex].AccelX = reader.GetDouble(0);
+                data[dataIndex].AccelY = reader.GetDouble(1);
+                data[dataIndex].AccelZ = reader.GetDouble(2);
+                data[dataIndex].Weight = reader.GetDouble(3);
+                dataIndex++;
+            }
+            reader.Close();
+            connection.Close();
 
-            
+            connection.Open();
+
+            dataIndex = 0;
+            reader = readAltcmd.ExecuteReader();
+            while (reader.Read())
+            {
+                data[dataIndex].Altitude = reader.GetDouble(0);
+                data[dataIndex].Pitch = reader.GetDouble(1);
+                data[dataIndex].Bank = reader.GetDouble(2);
+                dataIndex++;
+            }
+            reader.Close();
+            connection.Close();
+
             //use loop to generate list of AircraftTelemetryData object with data from DB
             //for (int i=0; i<15; i++)
             //{
@@ -210,7 +230,7 @@ namespace Ground_Terminal
             //        Bank = Convert.ToDouble(i)
             //    });
             //}
-            
+
 
             return data;
         }
