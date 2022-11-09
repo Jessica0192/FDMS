@@ -1,19 +1,29 @@
-﻿using System;
+﻿/*
+* FILE          : Logger.cs
+* PROJECT       : SENG3020 - Term Project
+* PROGRAMMER    : Troy Hill, Jessica Sim
+* FIRST VERSION : 2022-10-30
+* DESCRIPTION:
+*    This program logs the telemetry to an ASCII text file
+*/
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
+using System.Text; 
 using System.Threading.Tasks;
 
 namespace Ground_Terminal
 {
     internal class Logger
     {
-        /// <summary>
-        /// Log to eventlog and textfile
-        /// </summary>
-        /// <param name="message"></param>
+        /*
+        * FUNCTION : SearchTextBox_Search
+        * DESCRIPTION : This function logs the passed message to log file
+        * PARAMETERS : string message: the message to store in ASCII text file
+        * RETURNS : void
+        */
         public static void Log(string message)
         {
             //declare date variable

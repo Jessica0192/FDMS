@@ -1,4 +1,12 @@
-﻿using System;
+﻿/*
+* FILE          : SearchTextBox.cs
+* PROJECT       : SENG3020 - Term Project
+* PROGRAMMER    : Troy Hill, Jessica Sim
+* FIRST VERSION : 2022-10-30
+* DESCRIPTION:
+*    This file conains all the functionalities for search box
+*/
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -89,12 +97,26 @@ namespace Ground_Terminal
             searchEventDelayTimer.Tick += new EventHandler(OnSearchEventDelayTimerTick);
         }
 
+        /*
+        * FUNCTION : OnSearchEventTimeDelayChanged
+        * DESCRIPTION : This function apply the template to search icon border
+        * PARAMETERS : object o: object
+        *              EventArgs e: it contains state information and event data associated with event
+        * RETURNS : void
+        */
         void OnSearchEventDelayTimerTick(object o, EventArgs e)
         {
             searchEventDelayTimer.Stop();
             RaiseSearchEvent();
         }
 
+        /*
+        * FUNCTION : OnSearchEventTimeDelayChanged
+        * DESCRIPTION : This function apply the template to search icon border
+        * PARAMETERS : DependencyObject o: dependency object of search text box
+        *              DependencyPropertyChangedEventArgs e: it contains state information and event data associated with dependecy property changed event
+        * RETURNS : void
+        */
         static void OnSearchEventTimeDelayChanged(DependencyObject o, DependencyPropertyChangedEventArgs e)
         {
             SearchTextBox searchTextBox = o as SearchTextBox;
@@ -105,6 +127,12 @@ namespace Ground_Terminal
             }
         }
 
+        /*
+        * FUNCTION : OnApplyTemplate
+        * DESCRIPTION : This function apply the template to search icon border
+        * PARAMETERS : no parameters
+        * RETURNS : void
+        */
         protected override void OnTextChanged(TextChangedEventArgs e)
         {
             base.OnTextChanged(e);
@@ -117,6 +145,13 @@ namespace Ground_Terminal
             }
         }
 
+
+        /*
+       * FUNCTION : OnApplyTemplate
+       * DESCRIPTION : This function apply the template to search icon border
+       * PARAMETERS : no parameters
+       * RETURNS : void
+       */
         public override void OnApplyTemplate()
         {
             base.OnApplyTemplate();
@@ -130,11 +165,25 @@ namespace Ground_Terminal
             }
         }
 
+        /*
+       * FUNCTION : IconBorder_MouseLeftButtonDown
+       * DESCRIPTION : This function gets called when mouse left button is up from icon border
+       * PARAMETERS : object obj: button control
+       *              MouseButtonEventArgs e: it contains state information and event data associated with mouse event
+       * RETURNS : void
+       */
         private void IconBorder_MouseLeftButtonDown(object obj, MouseButtonEventArgs e)
         {
             IsMouseLeftButtonDown = true;
         }
 
+        /*
+        * FUNCTION : IconBorder_MouseLeftButtonUp
+        * DESCRIPTION : This function gets called when mouse left button is up from icon border
+        * PARAMETERS : object obj: button control
+        *              MouseButtonEventArgs e: it contains state information and event data associated with mouse event
+        * RETURNS : void
+        */
         private void IconBorder_MouseLeftButtonUp(object obj, MouseButtonEventArgs e)
         {
             if (!IsMouseLeftButtonDown) return;
@@ -149,11 +198,24 @@ namespace Ground_Terminal
             }
         }
 
+        /*
+        * FUNCTION : IconBorder_MouseLeave
+        * DESCRIPTION : This function gets called when mouse is away from icon border
+        * PARAMETERS : object obj: button control
+        *              MouseEventArgs e: it contains state information and event data associated with mouse event
+        * RETURNS : void
+        */
         private void IconBorder_MouseLeave(object obj, MouseEventArgs e)
         {
             IsMouseLeftButtonDown = false;
         }
 
+        /*
+        * FUNCTION : OnKeyDown
+        * DESCRIPTION : This function gets called when the key button is pressed
+        * PARAMETERS : KeyEventArgs e: it contains state information and event data associated with key event
+        * RETURNS : void
+        */
         protected override void OnKeyDown(KeyEventArgs e)
         {
             if(e.Key == Key.Escape && SearchMode == SearchMode.Instant)
@@ -170,6 +232,12 @@ namespace Ground_Terminal
             }
         }
 
+        /*
+        * FUNCTION : RaiseSearchEvent
+        * DESCRIPTION : This event is for raising search event
+        * PARAMETERS : no parameters
+        * RETURNS : void
+        */
         private void RaiseSearchEvent()
         {
             RoutedEventArgs args = new RoutedEventArgs(SearchEvent);
