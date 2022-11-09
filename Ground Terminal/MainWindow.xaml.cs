@@ -1,4 +1,13 @@
-﻿using System;
+﻿/*
+* FILE          : MainWindow.xaml.cs
+* PROJECT       : SENG3020 - Term Project
+* PROGRAMMER    : Troy Hill, Jessica Sim
+* FIRST VERSION : 2022-10-30
+* DESCRIPTION:
+*    This program collects remote telemetry from aircraft for display to the user, storage in a database
+*    and provides the ability for the user to request stored data for post anlysis
+*/
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
@@ -38,11 +47,24 @@ namespace Ground_Terminal
 
         public bool isRealTime = false;
 
+        /*
+        * FUNCTION : LoadDataToGrid
+        * DESCRIPTION : This function loads the data from database to datagrid in UI
+        * PARAMETERS : no parameters
+        * RETURNS : void
+        */
         private void LoadDataToGrid()
         {
             dataGrid.ItemsSource = LoadCollectionData();
         }
 
+        /*
+        * FUNCTION : SearchTextBox_Search
+        * DESCRIPTION : This function is being called when user put some text in search box and press enter or press the 'search' icon
+        * PARAMETERS : object sender: button control
+        *              RoutedEventArgs e: it contains state information and event data associated with routed event
+        * RETURNS : void
+        */
         private void SearchTextBox_Search(object sender, RoutedEventArgs e)
         {
             MessageBox.Show("On every key press");
@@ -76,6 +98,12 @@ namespace Ground_Terminal
 
         }
 
+        /*
+        * FUNCTION : WriteCollectionData
+        * DESCRIPTION : This function makes the connection to FDMS database and insert new data 
+        * PARAMETERS : List<AircraftTelemetryData> telData: list of telemetry data
+        * RETURNS : void
+        */
         private void WriteCollectionData(List<AircraftTelemetryData> telData)
         {
             String connectionString = @"server=localhost;database=FDMS_Test;trusted_connection=true";
@@ -114,6 +142,12 @@ namespace Ground_Terminal
             }
         }
 
+        /*
+        * FUNCTION : LoadCollectionData
+        * DESCRIPTION : This function makes the connection to FDMS database and gets the collection of telemetry data
+        * PARAMETERS : no parameters
+        * RETURNS : List<AircraftTelemetryData>: returns list of telemetry data from database
+        */
         private List<AircraftTelemetryData> LoadCollectionData()
         {
             String connectionString = @"server=localhost; database=FDMS_Test;trusted_connection=true";
@@ -187,29 +221,28 @@ namespace Ground_Terminal
         //    return result;
         //}
 
+        /*
+        * FUNCTION : toggleRealTimeMode_Checked
+        * DESCRIPTION : This function is being called when Real-Time toggle button is toggled on
+        * PARAMETERS : object sender: button control
+        *              RoutedEventArgs e: it contains state information and event data associated with routed event
+        * RETURNS : void
+        */
         private void toggleRealTimeMode_Checked(object sender, RoutedEventArgs e)
         {
             isRealTime = true;
-            MessageBox.Show("Button toggled on!");
         }
 
+        /*
+        * FUNCTION : toggleRealTimeMode_Unchecked
+        * DESCRIPTION : This function is being called when Real-Time toggle button is toggled off
+        * PARAMETERS : object sender: button control
+        *              RoutedEventArgs e: it contains state information and event data associated with routed event
+        * RETURNS : void
+        */
         private void toggleRealTimeMode_Unchecked(object sender, RoutedEventArgs e)
         {
             isRealTime = false;
-            MessageBox.Show("Button toggled off!");
         }
-    }
-
-
-    public class AircraftTelemetryData
-    {
-        public DateTime Timestamp { get; set; }
-        public double AccelX { get; set; }
-        public double AccelY { get; set; }
-        public double AccelZ { get; set; }
-        public double Weight { get; set; }
-        public double Altitude { get; set; }
-        public double Pitch { get; set; }
-        public double Bank { get; set; }
     }
 }
