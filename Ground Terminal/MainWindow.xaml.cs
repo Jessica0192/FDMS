@@ -48,29 +48,33 @@ namespace Ground_Terminal
             MessageBox.Show("On every key press");
         }
 
-        //private List<AircraftTelemetryData> recieveTelData()
-        //{
-        //    try
-        //    {
-        //        List<AircraftTelemetryData> data = new List<AircraftTelemetryData>();
-        //        Int32 port = 13000;
-        //        TcpClient tcpClient = new TcpClient("127.0.0.1", port);
-        //        string[] dataPacket = System.Text.Encoding.ASCII.GetString();
+        private List<AircraftTelemetryData> recieveTelData()
+        {
+            try
+            {
+                List<AircraftTelemetryData> data = new List<AircraftTelemetryData>();
+                Int32 port = 13000;
+                TcpClient tcpClient = new TcpClient("127.0.0.1", port);
+                NetworkStream stream = tcpClient.GetStream();
+                Byte[] dataStream = new Byte[256];
+                String responseString = String.Empty;
 
-        //        if(isRealTime ==  false)
-        //        {
+                Int32 bytes = stream.Read(dataStream, 0, dataStream.Length);
+                responseString = System.Text.Encoding.ASCII.GetString(dataStream, 0, bytes);
 
-        //        }
-        //        else if (isRealTime ==  true)
-        //        {
+                if(isRealTime ==  true)
+                {
+                    WriteCollectionData(data);
+                }
 
-        //        }
-        //    }
-        //    catch(SocketException e)
-        //    {
+                return data;
+            }
+            catch(SocketException e)
+            {
+                throw e;
+            }
 
-        //    }
-        //}
+        }
 
         private void WriteCollectionData(List<AircraftTelemetryData> telData)
         {
