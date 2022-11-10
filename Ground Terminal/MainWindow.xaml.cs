@@ -78,24 +78,21 @@ namespace Ground_Terminal
         {
             List<AircraftTelemetryData> data = new List<AircraftTelemetryData>();
             Int32 port = 13001;
-            TcpListener tcpServer;
-            TcpClient tcpClient;
-            Byte[] dataStream = new Byte[256];
+            TcpClient tcpClient = new TcpClient();
+            Byte[] dataStream = new Byte[512];
             String responseString = String.Empty;
 
-            tcpServer = new TcpListener(IPAddress.Parse("127.0.0.1"), port);
-            tcpServer.Start();
             try
             {
+                tcpClient.Connect("127.0.0.1", 13000);
                 while (true)
                 {
-                    string senderMessage = "Connecting";
-                    tcpClient = new TcpClient("127.0.0.1", 13000);
-                    // tcpServer.AcceptTcpClient();
+                    //string senderMessage = "Connecting";
+                    //tcpServer.AcceptTcpClient();
                     NetworkStream stream = tcpClient.GetStream();
-                    Byte[] sendBytes = Encoding.ASCII.GetBytes(senderMessage);
-                    stream.Write(sendBytes, 0, sendBytes.Length);
-                    stream.Flush();
+                    //Byte[] sendBytes = Encoding.ASCII.GetBytes(senderMessage);
+                    //stream.Write(sendBytes, 0, sendBytes.Length);
+                    //stream.Flush();
 
                     Int32 bytes = stream.Read(dataStream, 0, dataStream.Length);
                     responseString = System.Text.Encoding.ASCII.GetString(dataStream, 0, bytes);
@@ -135,13 +132,15 @@ namespace Ground_Terminal
                         data.Clear();
                         return data;
                     }
-                    tcpClient.Close();
                 }
-                
             }
             catch(SocketException e)
             {
                 throw e;
+            }
+            finally
+            {
+                tcpClient.Close();
             }
 
         }
