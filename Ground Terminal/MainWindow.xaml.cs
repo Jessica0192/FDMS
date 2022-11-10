@@ -15,6 +15,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Runtime.Remoting.Messaging;
+using System.Text;
 using System.Windows;
 using System.Windows.Media.Media3D;
 
@@ -28,20 +29,20 @@ namespace Ground_Terminal
         public MainWindow()
         {
             InitializeComponent();
-            List<AircraftTelemetryData> data = new List<AircraftTelemetryData>();
-           
-            data.Add(new AircraftTelemetryData()
-            {
-                Timestamp = DateTime.Now,
-                AccelX = 2.23,
-                AccelY = 4.45,
-                AccelZ = 3.14,
-                Weight = 10.23,
-                Altitude = 573.85,
-                Pitch = 34.4,
-                Bank = 23.3
-        });
-            WriteCollectionData(data);
+            //List<AircraftTelemetryData> data = new List<AircraftTelemetryData>();
+
+            //    data.Add(new AircraftTelemetryData()
+            //    {
+            //        Timestamp = DateTime.Now,
+            //        AccelX = 2.23,
+            //        AccelY = 4.45,
+            //        AccelZ = 3.14,
+            //        Weight = 10.23,
+            //        Altitude = 573.85,
+            //        Pitch = 34.4,
+            //        Bank = 23.3
+            //});
+
             LoadDataToGrid();
         }
 
@@ -67,30 +68,53 @@ namespace Ground_Terminal
         */
         private void SearchTextBox_Search(object sender, RoutedEventArgs e)
         {
+
             MessageBox.Show("On every key press");
         }
 
         private List<AircraftTelemetryData> recieveTelData()
         {
+            List<AircraftTelemetryData> data = new List<AircraftTelemetryData>();
+            Int32 port = 13001;
+            TcpListener tcpServer;
+            TcpClient tcpClient;
+            Byte[] dataStream = new Byte[256];
+            String responseString = String.Empty;
+
+            tcpServer = new TcpListener(IPAddress.Parse("127.0.0.1"), port);
+            tcpServer.Start();
             try
             {
-                List<AircraftTelemetryData> data = new List<AircraftTelemetryData>();
-                Int32 port = 13000;
-                TcpClient tcpClient = new TcpClient("127.0.0.1", port);
+                string senderMessage = "Connecting";
+                tcpClient = new TcpClient("127.0.0.1", 13000);
                 NetworkStream stream = tcpClient.GetStream();
-                Byte[] dataStream = new Byte[256];
-                String responseString = String.Empty;
+                Byte[] sendBytes = Encoding.ASCII.GetBytes(senderMessage);
+                stream.Write(sendBytes, 0, sendBytes.Length);
+                stream.Flush();
 
+                tcpServer.AcceptTcpClient();
                 Int32 bytes = stream.Read(dataStream, 0, dataStream.Length);
                 responseString = System.Text.Encoding.ASCII.GetString(dataStream, 0, bytes);
-
-                if(isRealTime ==  true)
+                string[] dataPackage = responseString.Split('#');
+                string[] telData = dataPackage[2].Split(',');
+                int checksum = CalculateCheckSum(telData[5], telData[6], telData[7]);
+                if (checksum == int.Parse(dataPackage[3]))
                 {
-                    
-                }
-                WriteCollectionData(data);
 
-                return data;
+                    WriteCollectionData(data);
+                    if (isRealTime == true)
+                    {
+                        LoadDataToGrid();
+                    }
+                    Logger.Log(dataPackage[2]);
+                    return data;
+                }
+                else
+                {
+                    data.Clear();
+                    return data;
+                }
+                
             }
             catch(SocketException e)
             {
@@ -235,11 +259,11 @@ namespace Ground_Terminal
             return data;
         }
 
-        //private string CalculateCheckSum(int checksum)
-        //{
-        //    string result = checksum.ToString();
-        //    return result;
-        //}
+        private int CalculateCheckSum(string altitude, string pitch, string bank)
+        {
+            float result = (float.Parse(altitude) + float.Parse(pitch) + float.Parse(bank) / 3);
+            return (int) Math.Round(result, 0);
+        }
 
         /*
         * FUNCTION : toggleRealTimeMode_Checked

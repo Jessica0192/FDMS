@@ -32,7 +32,7 @@ namespace Ground_Terminal
             string filePath = AppDomain.CurrentDomain.BaseDirectory + @".\GroundTerminalLogger.txt";
             string fullmessage = "";
             //create message to log
-            fullmessage = message + "-->" + now.ToString("F") + "\n";
+            fullmessage = message + "," + "\n";
             //check if file exists
             if (!File.Exists(filePath))
             {
