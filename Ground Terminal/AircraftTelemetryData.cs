@@ -12,6 +12,8 @@ namespace Ground_Terminal
 {
     public class AircraftTelemetryData
     {
+        public string TailNumber { get; set; }
+        public DateTime TelDate { get; set; }
         public DateTime Timestamp { get; set; }
         public double AccelX { get; set; }
         public double AccelY { get; set; }

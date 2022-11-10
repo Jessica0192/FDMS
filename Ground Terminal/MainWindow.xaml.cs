@@ -29,6 +29,7 @@ namespace Ground_Terminal
         public MainWindow()
         {
             InitializeComponent();
+
             //List<AircraftTelemetryData> data = new List<AircraftTelemetryData>();
 
             //    data.Add(new AircraftTelemetryData()
@@ -44,6 +45,7 @@ namespace Ground_Terminal
             //});
 
             LoadDataToGrid();
+            recieveTelData();
         }
 
         public bool isRealTime = false;
@@ -85,34 +87,55 @@ namespace Ground_Terminal
             tcpServer.Start();
             try
             {
-                string senderMessage = "Connecting";
-                tcpClient = new TcpClient("127.0.0.1", 13000);
-                NetworkStream stream = tcpClient.GetStream();
-                Byte[] sendBytes = Encoding.ASCII.GetBytes(senderMessage);
-                stream.Write(sendBytes, 0, sendBytes.Length);
-                stream.Flush();
-
-                tcpServer.AcceptTcpClient();
-                Int32 bytes = stream.Read(dataStream, 0, dataStream.Length);
-                responseString = System.Text.Encoding.ASCII.GetString(dataStream, 0, bytes);
-                string[] dataPackage = responseString.Split('#');
-                string[] telData = dataPackage[2].Split(',');
-                int checksum = CalculateCheckSum(telData[5], telData[6], telData[7]);
-                if (checksum == int.Parse(dataPackage[3]))
+                while (true)
                 {
+                    string senderMessage = "Connecting";
+                    tcpClient = new TcpClient("127.0.0.1", 13000);
+                    // tcpServer.AcceptTcpClient();
+                    NetworkStream stream = tcpClient.GetStream();
+                    Byte[] sendBytes = Encoding.ASCII.GetBytes(senderMessage);
+                    stream.Write(sendBytes, 0, sendBytes.Length);
+                    stream.Flush();
 
-                    WriteCollectionData(data);
-                    if (isRealTime == true)
+                    Int32 bytes = stream.Read(dataStream, 0, dataStream.Length);
+                    responseString = System.Text.Encoding.ASCII.GetString(dataStream, 0, bytes);
+                    string[] dataPackage = responseString.Split('#');
+                    string[] telData = dataPackage[3].Split(',');
+                    int checksum = CalculateCheckSum(telData[5], telData[6], telData[7]);
+                    if (checksum == int.Parse(dataPackage[4]))
                     {
-                        LoadDataToGrid();
+                        string[] dateArrange = telData[0].Split('_');
+                        string[] year = dateArrange[2].Split(' ');
+                        string dateString = year[0] + "-" + dateArrange[1] + "-" + dateArrange[0] + " " + year[1];
+                        DateTime telDate = DateTime.Parse(dateString);
+
+                        data.Add(new AircraftTelemetryData
+                        {
+                            TailNumber = dataPackage[1],
+                            TelDate = telDate,
+                            Timestamp = DateTime.Now,
+                            AccelX = double.Parse(telData[1]),
+                            AccelY = double.Parse(telData[2]),
+                            AccelZ = double.Parse(telData[3]),
+                            Weight = double.Parse(telData[4]),
+                            Altitude = double.Parse(telData[5]),
+                            Pitch = double.Parse(telData[6]),
+                            Bank = double.Parse(telData[7])
+                        });
+                        WriteCollectionData(data);
+                        if (isRealTime == true)
+                        {
+                            LoadDataToGrid();
+                        }
+                        Logger.Log(dataPackage[3]);
+                        return data;
                     }
-                    Logger.Log(dataPackage[2]);
-                    return data;
-                }
-                else
-                {
-                    data.Clear();
-                    return data;
+                    else
+                    {
+                        data.Clear();
+                        return data;
+                    }
+                    tcpClient.Close();
                 }
                 
             }
@@ -138,17 +161,18 @@ namespace Ground_Terminal
             {
                 connection.Open();
 
-                string telDataWrite = "INSERT INTO Telemetry (Tail_Number, Date_Time_Stamp)";
-                telDataWrite += " VALUES (@telTailNum, @telDate)";
-                string gDataWrite = "INSERT INTO GForce (AccelX, AccelY, AccelZ, telWeight)";
-                gDataWrite += " VALUES (@telAccelX, @telAccelY, @telAccelZ, @telWeightPar)";
-                string altDataWrite = "INSERT INTO Altitude (Altitude, Pitch, Bank)";
-                altDataWrite += " VALUES (@telAlt, @telPitch, @telBank)";
+                string telDataWrite = "INSERT INTO Telemetry (Tail_Number, Tel_Date, Date_Time_Stamp)";
+                telDataWrite += " VALUES (@telTailNum, @telDate, @dateStamp)";
+                string gDataWrite = "INSERT INTO GForce (Tail_Number, AccelX, AccelY, AccelZ, telWeight)";
+                gDataWrite += " VALUES (@telTailNum, @telAccelX, @telAccelY, @telAccelZ, @telWeightPar)";
+                string altDataWrite = "INSERT INTO Altitude (Tail_Number, Altitude, Pitch, Bank)";
+                altDataWrite += " VALUES (@telTailNum, @telAlt, @telPitch, @telBank)";
 
                 SqlCommand command = new SqlCommand(telDataWrite, connection);
                 //command.Parameters.AddWithValue("@telNum", 1);
-                command.Parameters.AddWithValue("@telTailNum", 3456);
-                command.Parameters.AddWithValue("@telDate", telData[0].Timestamp);
+                command.Parameters.AddWithValue("@telTailNum", telData[0].TailNumber);
+                command.Parameters.AddWithValue("@telDate", telData[0].TelDate);
+                command.Parameters.AddWithValue("@dateStamp", telData[0].Timestamp);
 
                // command.Prepare();
                int result = command.ExecuteNonQuery();
@@ -160,6 +184,7 @@ namespace Ground_Terminal
 
                 connection.Open();
                 command = new SqlCommand(gDataWrite, connection);
+                command.Parameters.AddWithValue("@telTailNum", telData[0].TailNumber);
                 command.Parameters.AddWithValue("@telAccelX", telData[0].AccelX);
                 command.Parameters.AddWithValue("@telAccelY", telData[0].AccelY);
                 command.Parameters.AddWithValue("@telAccelZ", telData[0].AccelZ);
@@ -169,6 +194,7 @@ namespace Ground_Terminal
 
                 connection.Open();
                 command = new SqlCommand(altDataWrite, connection);
+                command.Parameters.AddWithValue("@telTailNum", telData[0].TailNumber);
                 command.Parameters.AddWithValue("@telAlt", telData[0].Altitude);
                 command.Parameters.AddWithValue("@telPitch", telData[0].Pitch);
                 command.Parameters.AddWithValue("@telBank", telData[0].Bank);
