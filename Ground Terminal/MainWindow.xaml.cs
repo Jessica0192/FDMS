@@ -265,23 +265,6 @@ namespace Ground_Terminal
             reader.Close();
             connection.Close();
 
-            //use loop to generate list of AircraftTelemetryData object with data from DB
-            //for (int i=0; i<15; i++)
-            //{
-            //    data.Add(new AircraftTelemetryData()
-            //    {
-            //        Timestamp = new DateTime(),
-            //        AccelX = Convert.ToDouble(i),
-            //        AccelY = Convert.ToDouble(i),
-            //        AccelZ = Convert.ToDouble(i),
-            //        Weight = Convert.ToDouble(i),
-            //        Altitude = Convert.ToDouble(i),
-            //        Pitch = Convert.ToDouble(i),
-            //        Bank = Convert.ToDouble(i)
-            //    });
-            //}
-
-
             return data;
         }
 
