@@ -45,7 +45,7 @@ namespace Ground_Terminal
             //});
 
             LoadDataToGrid();
-            //recieveTelData();
+            recieveTelData();
         }
 
         public bool isRealTime = false;
@@ -125,14 +125,15 @@ namespace Ground_Terminal
         private List<AircraftTelemetryData> recieveTelData()
         {
             List<AircraftTelemetryData> data = new List<AircraftTelemetryData>();
-            Int32 port = 13001;
+            Int32 port = 13000;
+            string ipAddr = "127.0.0.1";
             TcpClient tcpClient = new TcpClient();
             Byte[] dataStream = new Byte[512];
             String responseString = String.Empty;
 
             try
             {
-                tcpClient.Connect("127.0.0.1", 13000);
+                tcpClient.Connect(ipAddr, port);
                 while (true)
                 {
                     //string senderMessage = "Connecting";
@@ -144,43 +145,50 @@ namespace Ground_Terminal
 
                     Int32 bytes = stream.Read(dataStream, 0, dataStream.Length);
                     responseString = System.Text.Encoding.ASCII.GetString(dataStream, 0, bytes);
-                    string[] dataPackage = responseString.Split('#');
-                    string[] telData = dataPackage[3].Split(',');
-                    int checksum = CalculateCheckSum(telData[5], telData[6], telData[7]);
-                    if (checksum == int.Parse(dataPackage[4]))
+                    string[] dataPackage = responseString.Split('\n');
+                    for (int i = 0; i < dataPackage.Length; i++)
                     {
-                        string[] dateArrange = telData[0].Split('_');
-                        string[] year = dateArrange[2].Split(' ');
-                        string dateString = year[0] + "-" + dateArrange[1] + "-" + dateArrange[0] + " " + year[1];
-                        DateTime telDate = DateTime.Parse(dateString);
+                        if (dataPackage[i] != "")
+                        {
+                            string[] dataParse = dataPackage[i].Split('#');
+                            string[] telData = dataParse[3].Split(',');
+                            int checksum = CalculateCheckSum(telData[5], telData[6], telData[7]);
+                            if (checksum == int.Parse(dataParse[4]))
+                            {
+                                string[] dateArrange = telData[0].Split('_');
+                                string[] year = dateArrange[2].Split(' ');
+                                string dateString = year[0] + "-" + dateArrange[1] + "-" + dateArrange[0] + " " + year[1];
+                                DateTime telDate = DateTime.Parse(dateString);
 
-                        data.Add(new AircraftTelemetryData
-                        {
-                            TailNumber = dataPackage[1],
-                            TelDate = DateTime.Now,
-                            Timestamp = telDate,
-                            AccelX = double.Parse(telData[1]),
-                            AccelY = double.Parse(telData[2]),
-                            AccelZ = double.Parse(telData[3]),
-                            Weight = double.Parse(telData[4]),
-                            Altitude = double.Parse(telData[5]),
-                            Pitch = double.Parse(telData[6]),
-                            Bank = double.Parse(telData[7])
-                        });
-                        WriteCollectionData(data);
-                        if (isRealTime == true)
-                        {
-                            LoadDataToGrid();
+                                data.Add(new AircraftTelemetryData
+                                {
+                                    TailNumber = dataPackage[1],
+                                    TelDate = DateTime.Now,
+                                    Timestamp = telDate,
+                                    AccelX = double.Parse(telData[1]),
+                                    AccelY = double.Parse(telData[2]),
+                                    AccelZ = double.Parse(telData[3]),
+                                    Weight = double.Parse(telData[4]),
+                                    Altitude = double.Parse(telData[5]),
+                                    Pitch = double.Parse(telData[6]),
+                                    Bank = double.Parse(telData[7])
+                                });
+                                WriteCollectionData(data);
+                                if (isRealTime == true)
+                                {
+                                    LoadDataToGrid();
+                                }
+                                Logger.Log(dataParse[3]);
+                                //return data;
+                                responseString = String.Empty;
+                            }
                         }
-                        Logger.Log(dataPackage[3]);
-                        //return data;
-                        responseString = String.Empty;
                     }
                 }
             }
             catch(SocketException e)
             {
-                throw e;
+                MessageBox.Show("There is a problem connecting to the air transmission system \n Error Code: " + e.ToString());
             }
             finally
             {
@@ -246,7 +254,7 @@ namespace Ground_Terminal
             }
             catch(SqlException e)
             {
-                throw e;
+                MessageBox.Show("There was a problem getting data for the application \n Error Code: " + e.ToString());
             }
         }
 
