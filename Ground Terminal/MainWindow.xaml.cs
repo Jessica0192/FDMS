@@ -45,7 +45,7 @@ namespace Ground_Terminal
             //});
 
             LoadDataToGrid();
-            recieveTelData();
+            //recieveTelData();
         }
 
         public bool isRealTime = false;
@@ -70,8 +70,56 @@ namespace Ground_Terminal
         */
         private void SearchTextBox_Search(object sender, RoutedEventArgs e)
         {
+            String connectionString = @"server=localhost; database=FDMS;trusted_connection=true";
+            SqlConnection connection = new SqlConnection(connectionString);
+            List<AircraftTelemetryData> data = new List<AircraftTelemetryData>();
+            SqlCommand readTelcmd = new SqlCommand("SELECT TOP 15 Tail_Number, Date_Time_Stamp FROM Telemetry WHERE Tail_Number=@tailNum", connection);
+            readTelcmd.Parameters.AddWithValue("@tailNum", "C-FGAX");
+            SqlCommand readGForcecmd = new SqlCommand("SELECT TOP 15 AccelX, AccelY, AccelZ, telWeight FROM GForce", connection);
+            SqlCommand readAltcmd = new SqlCommand("SELECT TOP 15 Altitude, Pitch, Bank FROM Altitude", connection);
 
-            MessageBox.Show("On every key press");
+            connection.Open();
+
+            SqlDataReader reader = readTelcmd.ExecuteReader();
+
+            while (reader.Read())
+            {
+                data.Add(new AircraftTelemetryData()
+                {
+                    Timestamp = reader.GetDateTime(1),
+                });
+            }
+            reader.Close();
+            connection.Close();
+
+            int dataIndex = 0;
+            connection.Open();
+
+            reader = readGForcecmd.ExecuteReader();
+            while (reader.Read())
+            {
+                data[dataIndex].AccelX = reader.GetDouble(0);
+                data[dataIndex].AccelY = reader.GetDouble(1);
+                data[dataIndex].AccelZ = reader.GetDouble(2);
+                data[dataIndex].Weight = reader.GetDouble(3);
+                dataIndex++;
+            }
+            reader.Close();
+            connection.Close();
+
+            connection.Open();
+
+            dataIndex = 0;
+            reader = readAltcmd.ExecuteReader();
+            while (reader.Read())
+            {
+                data[dataIndex].Altitude = reader.GetDouble(0);
+                data[dataIndex].Pitch = reader.GetDouble(1);
+                data[dataIndex].Bank = reader.GetDouble(2);
+                dataIndex++;
+            }
+            reader.Close();
+            connection.Close();
         }
 
         private List<AircraftTelemetryData> recieveTelData()
@@ -89,8 +137,8 @@ namespace Ground_Terminal
                 {
                     //string senderMessage = "Connecting";
                     //tcpServer.AcceptTcpClient();
-                    NetworkStream stream = tcpClient.GetStream();
                     //Byte[] sendBytes = Encoding.ASCII.GetBytes(senderMessage);
+                    NetworkStream stream = tcpClient.GetStream();
                     //stream.Write(sendBytes, 0, sendBytes.Length);
                     //stream.Flush();
 
@@ -109,8 +157,8 @@ namespace Ground_Terminal
                         data.Add(new AircraftTelemetryData
                         {
                             TailNumber = dataPackage[1],
-                            TelDate = telDate,
-                            Timestamp = DateTime.Now,
+                            TelDate = DateTime.Now,
+                            Timestamp = telDate,
                             AccelX = double.Parse(telData[1]),
                             AccelY = double.Parse(telData[2]),
                             AccelZ = double.Parse(telData[3]),
@@ -125,12 +173,8 @@ namespace Ground_Terminal
                             LoadDataToGrid();
                         }
                         Logger.Log(dataPackage[3]);
-                        return data;
-                    }
-                    else
-                    {
-                        data.Clear();
-                        return data;
+                        //return data;
+                        responseString = String.Empty;
                     }
                 }
             }
@@ -142,7 +186,7 @@ namespace Ground_Terminal
             {
                 tcpClient.Close();
             }
-
+            return data;
         }
 
         /*
@@ -160,21 +204,21 @@ namespace Ground_Terminal
             {
                 connection.Open();
 
-                string telDataWrite = "INSERT INTO Telemetry (Tail_Number, Tel_Date, Date_Time_Stamp)";
-                telDataWrite += " VALUES (@telTailNum, @telDate, @dateStamp)";
-                string gDataWrite = "INSERT INTO GForce (Tail_Number, AccelX, AccelY, AccelZ, telWeight)";
-                gDataWrite += " VALUES (@telTailNum, @telAccelX, @telAccelY, @telAccelZ, @telWeightPar)";
-                string altDataWrite = "INSERT INTO Altitude (Tail_Number, Altitude, Pitch, Bank)";
-                altDataWrite += " VALUES (@telTailNum, @telAlt, @telPitch, @telBank)";
+                string telDataWrite = "INSERT INTO Telemetry (Tail_Number, Date_Time_Stamp, Entry_Timestamp)";
+                telDataWrite += " VALUES (@telTailNum, @dateStamp, @telDate)";
+                string gDataWrite = "INSERT INTO GForce (AccelX, AccelY, AccelZ, telWeight)";
+                gDataWrite += " VALUES (@telAccelX, @telAccelY, @telAccelZ, @telWeightPar)";
+                string altDataWrite = "INSERT INTO Altitude (Altitude, Pitch, Bank)";
+                altDataWrite += " VALUES (@telAlt, @telPitch, @telBank)";
 
                 SqlCommand command = new SqlCommand(telDataWrite, connection);
                 //command.Parameters.AddWithValue("@telNum", 1);
                 command.Parameters.AddWithValue("@telTailNum", telData[0].TailNumber);
-                command.Parameters.AddWithValue("@telDate", telData[0].TelDate);
                 command.Parameters.AddWithValue("@dateStamp", telData[0].Timestamp);
+                command.Parameters.AddWithValue("@telDate", telData[0].TelDate);
 
-               // command.Prepare();
-               int result = command.ExecuteNonQuery();
+                // command.Prepare();
+                int result = command.ExecuteNonQuery();
                 if(result == 1)
                 {
                     Console.WriteLine("Success");
@@ -183,7 +227,7 @@ namespace Ground_Terminal
 
                 connection.Open();
                 command = new SqlCommand(gDataWrite, connection);
-                command.Parameters.AddWithValue("@telTailNum", telData[0].TailNumber);
+               // command.Parameters.AddWithValue("@telTailNum", telData[0].TailNumber);
                 command.Parameters.AddWithValue("@telAccelX", telData[0].AccelX);
                 command.Parameters.AddWithValue("@telAccelY", telData[0].AccelY);
                 command.Parameters.AddWithValue("@telAccelZ", telData[0].AccelZ);
@@ -193,7 +237,7 @@ namespace Ground_Terminal
 
                 connection.Open();
                 command = new SqlCommand(altDataWrite, connection);
-                command.Parameters.AddWithValue("@telTailNum", telData[0].TailNumber);
+               // command.Parameters.AddWithValue("@telTailNum", telData[0].TailNumber);
                 command.Parameters.AddWithValue("@telAlt", telData[0].Altitude);
                 command.Parameters.AddWithValue("@telPitch", telData[0].Pitch);
                 command.Parameters.AddWithValue("@telBank", telData[0].Bank);
