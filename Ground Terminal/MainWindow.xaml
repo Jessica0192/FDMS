@@ -268,7 +268,7 @@
             </StackPanel>
         </Border>-->
 
-        <local:SearchTextBox Height="25" Margin="10,5,10,10" Grid.Row="0" SearchMode="Delayed" Search="SearchTextBox_Search" />
+        <local:SearchTextBox x:Name="telSearch" Height="25" Margin="10,5,10,10" Grid.Row="0" SearchMode="Delayed" Search="SearchTextBox_Search" />
 
         <DataGrid Name="dataGrid"
                   Grid.Row="1"
@@ -305,5 +305,6 @@
                       HorizontalAlignment="Left" Content="Real-Time Mode"
                       Checked="toggleRealTimeMode_Checked"
                       Unchecked="toggleRealTimeMode_Unchecked"/>
+        <Button HorizontalAlignment="Right" Width="100" Grid.Row="2" Content="Connect" Click="Button_Click"/>
     </Grid>
 </Window>

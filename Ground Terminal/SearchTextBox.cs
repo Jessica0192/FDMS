@@ -27,6 +27,7 @@ namespace Ground_Terminal
 
     public class SearchTextBox : TextBox
     {
+
         public static DependencyProperty LabelTextProperty =
             DependencyProperty.Register(
                 "LabelText",

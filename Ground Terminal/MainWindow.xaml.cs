@@ -45,7 +45,6 @@ namespace Ground_Terminal
             //});
 
             LoadDataToGrid();
-            recieveTelData();
         }
 
         public bool isRealTime = false;
@@ -73,8 +72,8 @@ namespace Ground_Terminal
             String connectionString = @"server=localhost; database=FDMS;trusted_connection=true";
             SqlConnection connection = new SqlConnection(connectionString);
             List<AircraftTelemetryData> data = new List<AircraftTelemetryData>();
-            SqlCommand readTelcmd = new SqlCommand("SELECT TOP 15 Tail_Number, Date_Time_Stamp FROM Telemetry WHERE Tail_Number=@tailNum", connection);
-            readTelcmd.Parameters.AddWithValue("@tailNum", "C-FGAX");
+            SqlCommand readTelcmd = new SqlCommand("SELECT TOP 15 Tail_Number, Date_Time_Stamp FROM Telemetry WHERE Tail_Number='" + telSearch.Text.ToString() + "'", connection);
+            //readTelcmd.Parameters.AddWithValue("@tailNum", telSearch.Text.ToString());
             SqlCommand readGForcecmd = new SqlCommand("SELECT TOP 15 AccelX, AccelY, AccelZ, telWeight FROM GForce", connection);
             SqlCommand readAltcmd = new SqlCommand("SELECT TOP 15 Altitude, Pitch, Bank FROM Altitude", connection);
 
@@ -162,7 +161,7 @@ namespace Ground_Terminal
 
                                 data.Add(new AircraftTelemetryData
                                 {
-                                    TailNumber = dataPackage[1],
+                                    TailNumber = dataParse[1],
                                     TelDate = DateTime.Now,
                                     Timestamp = telDate,
                                     AccelX = double.Parse(telData[1]),
@@ -173,10 +172,25 @@ namespace Ground_Terminal
                                     Pitch = double.Parse(telData[6]),
                                     Bank = double.Parse(telData[7])
                                 });
+                                /*var tmp = new AircraftTelemetryData
+                                {
+                                    TailNumber = dataParse[1],
+                                    TelDate = DateTime.Now,
+                                    Timestamp = telDate,
+                                    AccelX = double.Parse(telData[1]),
+                                    AccelY = double.Parse(telData[2]),
+                                    AccelZ = double.Parse(telData[3]),
+                                    Weight = double.Parse(telData[4]),
+                                    Altitude = double.Parse(telData[5]),
+                                    Pitch = double.Parse(telData[6]),
+                                    Bank = double.Parse(telData[7])
+                                };*/
+
+                                //data.Add(tmp);
                                 WriteCollectionData(data);
                                 if (isRealTime == true)
                                 {
-                                    LoadDataToGrid();
+                                    dataGrid.Items.Add(data[0]);//LoadDataToGrid();
                                 }
                                 Logger.Log(dataParse[3]);
                                 //return data;
@@ -192,6 +206,7 @@ namespace Ground_Terminal
             }
             finally
             {
+                //MessageBox.Show("Hello");
                 tcpClient.Close();
             }
             return data;
@@ -347,6 +362,11 @@ namespace Ground_Terminal
         private void toggleRealTimeMode_Unchecked(object sender, RoutedEventArgs e)
         {
             isRealTime = false;
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            recieveTelData();
         }
     }
 }
